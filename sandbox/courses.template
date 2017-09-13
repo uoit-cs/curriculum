@@ -1,0 +1,40 @@
+<html>
+    <head>
+    <style>
+        .course {
+            font-family: Helvetica;
+            padding: 10px;
+            border: thin solid #aaa;
+            margin-bottom: 30px;
+            padding-left: 40px;
+            width: 500px;
+            page-break-inside: avoid;
+        }
+        .course.page-break {
+        }
+        .course h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .course p {
+            font-size: 10pt;
+            margin-left: 100px;
+            margin-right: 50px;
+        }
+    </style>
+    </head>
+    <body>
+    {% for name, desc in courses %}
+        {% if loop.index % 4 == 0 %}
+            {% set pg = "page-break" %}
+        {% else %}
+            {% set pg = "" %}
+        {% endif %}
+        <div class="course {{pg}}">
+            <h1>{{name}}</h1>
+            <p>{{desc}}</p>
+        </div>
+    {% endfor %}
+    </body>
+</html>
