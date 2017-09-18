@@ -53,6 +53,14 @@ class Course(Restful):
                     self.data['laboratory_hours'] = str(x.next_sibling.strip())
         return self
 
+def course_href(catoid, coid):
+    return '''
+            ajax/preview_course.php
+            ?catoid=%s
+            &coid=%s
+            &show
+           ''' % (catoid, coid)
+
 class Program(Restful):
     def parse(self):
         self.courses = []
@@ -65,12 +73,7 @@ class Program(Restful):
                 args = [x.strip(" '") for x in m.group(1).split(",")]
                 if len(args) == 4:
                     (catoid, coid, _, display) = args
-                    href = '''
-                            ajax/preview_course.php
-                            ?catoid=%s
-                            &coid=%s
-                            &show
-                          ''' % (catoid, coid)
+                    href = course_href(catoid, coid)
                     self.courses.append(Course(href).info(name=clear_text(name)))
         return self
 
@@ -112,8 +115,37 @@ class Calendar(Restful):
                 self.faculties.append(Faculty(href).info(name=text))
         return self
 
+class CourseListing(Restful):
+    def __init__(self, prefix='CSCI'):
+        self.url = '''content.php
+                    ?filter[27]=%s
+                    &filter[29]=
+                    &filter[course_type]=-1
+                    &filter[keyword]=
+                    &filter[32]=1
+                    &filter[cpage]=1
+                    &cur_cat_oid=12
+                    &expand=
+                    &navoid=441
+                    &search_database=Filter''' % prefix
+    def parse(self):
+        self.courses = []
+        for a in self.soup.find_all('a'):
+            try:
+                href = a['href']
+                if href.startswith('preview_course'):
+                    m = re.search(r'catoid=(\d+)&coid=(\d+)', href)
+                    if m:
+                        url = course_href(m.group(1), m.group(2))
+                        name = clear_text(a.get_text())
+                        self.courses.append(Course(url).info(name=name))
+            except:
+                pass
+        return self
 
 def render(path, context):
     path, filename = os.path.split(path)
     return jinja2.Environment(loader=jinja2.FileSystemLoader(path or "./")
             ).get_template(filename).render(context)
+
+
